@@ -1,13 +1,16 @@
 import logging, requests, re
+from urllib.parse import quote
 from bs4 import BeautifulSoup
+import json
 
 
 class CrawlImmobilienscout:
     __log__ = logging.getLogger(__name__)
     URL_PATTERN = re.compile(r'https://www\.immobilienscout24\.de')
 
-    def __init__(self):
+    def __init__(self, config):
         logging.getLogger("requests").setLevel(logging.WARNING)
+        self.config = config
 
     def get_results(self, search_url):
         # convert to paged URL
@@ -70,9 +73,15 @@ class CrawlImmobilienscout:
             attr_els = attr_container_els[idx].find_all('dd')
             try:
                 address = address_fields[idx].text.strip()
+                try:
+                    query_url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={quote(address)}&destinations={quote(self.config['time2dest']['destination'])}&key={self.config['time2dest']['gkey']}&mode=transit"
+                    distance_response = json.loads(requests.get(query_url).text)
+                    address += f" ({int((distance_response['rows'][0]['elements'][0]['duration']['value'] * 1.15) / 60)} mins to work)"
+                except:
+                    logging.warning(f"Failed distance calculation for address {address}")
             except:
-                address = "No address given"
-            if(len(attr_els)>2) :
+                address = "N/A"
+            if (len(attr_els) > 2):
                 details = {
                     'id': expose_ids[idx],
                     'url': expose_urls[idx],

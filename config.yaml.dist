@@ -30,8 +30,14 @@ message: |
     Zimmer: {rooms}
     Größe: {size}
     Preis: {price}
-
+    Address: {address}
     {url}
+
+# For time to destination feature - uses google's distance matrix api for time estimation
+time2dest:
+    gkey:
+    destination:
+
 
 # Sending messages using Telegram requires a Telegram Bot configured. 
 # Telegram.org offers a good documentation about how to create a bot.

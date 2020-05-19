@@ -56,6 +56,7 @@ class Hunter:
                     rooms=expose['rooms'],
                     size=expose['size'],
                     price=expose['price'],
+                    address=expose['address'],
                     url=expose['url']
                     ).strip()
 
