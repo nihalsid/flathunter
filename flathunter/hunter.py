@@ -23,7 +23,7 @@ class Hunter:
             try:
                 for searcher in searchers:
                     if re.search(searcher.URL_PATTERN, url):
-                        results = searcher.get_results(url)
+                        results = searcher.get_results(url, processed)
                         break
             except requests.exceptions.ConnectionError:
                 self.__log__.warning("Connection to %s failed. Retrying. " % url.split('/')[2])

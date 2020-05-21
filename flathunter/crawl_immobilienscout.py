@@ -12,7 +12,7 @@ class CrawlImmobilienscout:
         logging.getLogger("requests").setLevel(logging.WARNING)
         self.config = config
 
-    def get_results(self, search_url):
+    def get_results(self, search_url, ids_to_exclude):
         # convert to paged URL
         # if '/P-' in search_url:
         #     search_url = re.sub(r"/Suche/(.+?)/P-\d+", "/Suche/\1/P-{0}", search_url)
@@ -32,14 +32,14 @@ class CrawlImmobilienscout:
         except IndexError:
             self.__log__.debug('Index Error occured')
         # get data from first page
-        entries = self.extract_data(soup)
+        entries = self.extract_data(soup, ids_to_exclude)
 
         # iterate over all remaining pages
         while len(entries) < no_of_results:
             self.__log__.debug('Next Page, Number of entries : ' + str(len(entries)) + "no of resulst: " + str(no_of_results))
             page_no += 1
             soup = self.get_page(search_url, page_no)
-            cur_entry = self.extract_data(soup)
+            cur_entry = self.extract_data(soup, ids_to_exclude)
             if cur_entry == []:
                 break
             entries.extend(cur_entry)
@@ -52,7 +52,7 @@ class CrawlImmobilienscout:
             self.__log__.error("Got response (%i): %s" % (resp.status_code, resp.content))
         return BeautifulSoup(resp.content, 'html.parser')
 
-    def extract_data(self, soup):
+    def extract_data(self, soup, ids_to_exclude):
         entries = []
 
         title_elements = soup.find_all(lambda e: e.name == 'a' and e.has_attr('class') and 'result-list-entry__brand-title-container' in e['class'])
@@ -70,13 +70,16 @@ class CrawlImmobilienscout:
         attr_container_els = soup.find_all(lambda e: e.has_attr('data-is24-qa') and e['data-is24-qa'] == "attributes")
         address_fields = soup.find_all(lambda e: e.has_attr('class') and 'result-list-entry__address' in e['class'])
         for idx, title_el in enumerate(title_elements):
+            if expose_ids[idx] in ids_to_exclude:
+                continue
             attr_els = attr_container_els[idx].find_all('dd')
             try:
                 address = address_fields[idx].text.strip()
                 try:
-                    query_url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={quote(address)}&destinations={quote(self.config['time2dest']['destination'])}&key={self.config['time2dest']['gkey']}&mode=transit"
-                    distance_response = json.loads(requests.get(query_url).text)
-                    address += f" ({int((distance_response['rows'][0]['elements'][0]['duration']['value'] * 1.15) / 60)} mins to work)"
+                    if self.config['time2dest']['gkey'] is not None and self.config['time2dest']['destination'] is not None:
+                        query_url = f"https://maps.googleapis.com/maps/api/distancematrix/json?origins={quote(address)}&destinations={quote(self.config['time2dest']['destination'])}&key={self.config['time2dest']['gkey']}&mode=transit"
+                        distance_response = json.loads(requests.get(query_url).text)
+                        address += f" ({int((distance_response['rows'][0]['elements'][0]['duration']['value'] * 1.15) / 60)} mins to work)"
                 except:
                     logging.warning(f"Failed distance calculation for address {address}")
             except:

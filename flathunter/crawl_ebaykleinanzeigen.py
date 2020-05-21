@@ -8,16 +8,17 @@ class CrawlEbayKleinanzeigen:
     __log__ = logging.getLogger(__name__)
     URL_PATTERN = re.compile(r'https://www\.ebay-kleinanzeigen\.de')
 
-    def __init__(self):
+    def __init__(self, config):
         logging.getLogger("requests").setLevel(logging.WARNING)
+        self.config = config
 
-    def get_results(self, search_url):
+    def get_results(self, search_url, ids_to_exclude):
         self.__log__.debug("Got search URL %s" % search_url)
 
         soup = self.get_page(search_url)
 
         # get data from first page
-        entries = self.extract_data(soup)
+        entries = self.extract_data(soup, ids_to_exclude)
         self.__log__.debug('Number of found entries: ' + str(len(entries)))
 
         return entries
@@ -28,19 +29,22 @@ class CrawlEbayKleinanzeigen:
             self.__log__.error("Got response (%i): %s" % (resp.status_code, resp.content))
         return BeautifulSoup(resp.content, 'html.parser')
 
-    def extract_data(self, soup):
+    def extract_data(self, soup, ids_to_exclude):
         entries = []
         soup = soup.find(id="srchrslt-adtable")
         try:
             title_elements = soup.find_all( lambda e: e.has_attr('class') and 'ellipsis' in e['class'])
         except AttributeError:
             return entries
-        expose_ids=soup.find_all("article", class_="aditem")
+        expose_ids = soup.find_all("article", class_="aditem")
 
 
         #soup.find_all(lambda e: e.has_attr('data-adid'))
         #print(expose_ids)
-        for idx,title_el in enumerate(title_elements):
+        for idx, title_el in enumerate(title_elements):
+            id = int(expose_ids[idx].get("data-adid"))
+            if id in ids_to_exclude:
+                continue
             price = expose_ids[idx].find("strong").text
             tags = expose_ids[idx].find_all(class_="simpletag tag-small")
             address = "https://www.ebay-kleinanzeigen.de/" +title_el.get("href")
@@ -57,7 +61,7 @@ class CrawlEbayKleinanzeigen:
                 size = "Nicht gegeben"
                 #print("Quadratmeter nicht angegeben")
             details = {
-                'id': int(expose_ids[idx].get("data-adid")),
+                'id': id,
                 'url':  address ,
                 'title': title_el.text.strip(),
                 'price': price,

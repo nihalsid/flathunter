@@ -8,16 +8,17 @@ class CrawlImmoWelt:
     logging.getLogger('chardet.charsetprober').setLevel(logging.INFO)
     URL_PATTERN = re.compile(r'https://www\.immowelt\.de')
 
-    def __init__(self):
+    def __init__(self, config):
         logging.getLogger("requests").setLevel(logging.WARNING)
+        self.config = config
 
-    def get_results(self, search_url):
+    def get_results(self, search_url, ids_to_exclude):
         self.__log__.debug("Got search URL %s" % search_url)
 
         soup = self.get_page(search_url)
 
         # get data from first page
-        entries = self.extract_data(soup)
+        entries = self.extract_data(soup, ids_to_exclude)
         self.__log__.debug('Number of found entries: ' + str(len(entries)))
 
         return entries
@@ -28,7 +29,7 @@ class CrawlImmoWelt:
             self.__log__.error("Got response (%i): %s" % (resp.status_code, resp.content))
         return BeautifulSoup(resp.content, 'html.parser')
 
-    def extract_data(self, soup):
+    def extract_data(self, soup, ids_to_exclude):
         entries = []
         soup = soup.find('div',class_ = "iw_list_content")
         #print soup
@@ -39,6 +40,8 @@ class CrawlImmoWelt:
                 price = listing.find('div',class_=re.compile("hardfact price")).find("strong").text.strip()
                 id = listing.find('a').get('href').split('expose/',1)[1].split('?',1)[0].strip()
                 id = int(id,base=36)
+                if id in ids_to_exclude:
+                    continue
                 url = "https://www.immowelt.de" + listing.find('a').get('href')
                 size = listing.find('div',class_="hardfact ").text
                 size = size.split('ca.)',1)[1].strip()

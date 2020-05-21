@@ -40,7 +40,7 @@ __log__ = logging.getLogger(__name__)
 
 
 def launch_flat_hunt(config):
-    searchers = [CrawlImmobilienscout(config), CrawlWgGesucht(),CrawlEbayKleinanzeigen(),CrawlImmoWelt()]
+    searchers = [CrawlImmobilienscout(config), CrawlWgGesucht(config), CrawlEbayKleinanzeigen(config), CrawlImmoWelt(config)]
     id_watch = IdMaintainer('%s/processed_ids.db' % os.path.dirname(os.path.abspath(__file__)))
 
     hunter = Hunter()
