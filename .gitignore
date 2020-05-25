@@ -1,5 +1,3 @@
-*.ini
-*.yaml
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -95,5 +93,6 @@ processed_ids.db
 
 .idea/
 config.yaml
-.ftpconfig
-log.txt
+
+# Vim
+.*.swp

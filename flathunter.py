@@ -6,12 +6,12 @@ import os
 import logging
 import time
 import yaml
+from flathunter.crawl_ebaykleinanzeigen import CrawlEbayKleinanzeigen
 from flathunter.crawl_immobilienscout import CrawlImmobilienscout
 from flathunter.crawl_wggesucht import CrawlWgGesucht
+from flathunter.crawl_immowelt import CrawlImmowelt
 from flathunter.idmaintainer import IdMaintainer
 from flathunter.hunter import Hunter
-from flathunter.crawl_ebaykleinanzeigen import CrawlEbayKleinanzeigen
-from flathunter.crawl_immowelt import CrawlImmoWelt
 
 __author__ = "Jan Harrie"
 __version__ = "1.0"
@@ -31,24 +31,22 @@ else:
     # else without color
     format = '[%(asctime)s|%(filename)-18s|%(levelname)-8s]: %(message)s',
 logging.basicConfig(
-    filename='log.txt',
     format=format,
-    filemode='w',
     datefmt='%Y/%m/%d %H:%M:%S',
-    level=logging.DEBUG)
+    level=logging.INFO)
 __log__ = logging.getLogger(__name__)
 
 
 def launch_flat_hunt(config):
-    searchers = [CrawlImmobilienscout(config), CrawlWgGesucht(config), CrawlEbayKleinanzeigen(config), CrawlImmoWelt(config)]
+    searchers = [CrawlImmobilienscout(), CrawlWgGesucht(), CrawlEbayKleinanzeigen(), CrawlImmowelt()]
     id_watch = IdMaintainer('%s/processed_ids.db' % os.path.dirname(os.path.abspath(__file__)))
 
-    hunter = Hunter()
-    hunter.hunt_flats(config, searchers, id_watch)
+    hunter = Hunter(config)
+    hunter.hunt_flats(searchers, id_watch)
 
     while config.get('loop', dict()).get('active', False):
-        time.sleep(config.get('loop', dict()).get('sleeping_time',60*10))
-        hunter.hunt_flats(config, searchers, id_watch)
+        time.sleep(config.get('loop', dict()).get('sleeping_time', 60 * 10))
+        hunter.hunt_flats(searchers, id_watch)
 
 
 def main():
@@ -56,7 +54,7 @@ def main():
     parser = argparse.ArgumentParser(description="Searches for flats on Immobilienscout24.de and wg-gesucht.de and "
                                                  "sends results to Telegram User", epilog="Designed by Nody")
     parser.add_argument('--config', '-c',
-                        type=argparse.FileType('r'),
+                        type=argparse.FileType('r', encoding='UTF-8'),
                         default='%s/config.yaml' % os.path.dirname(os.path.abspath(__file__)),
                         help="Config file to use. If not set, try to use '%s/config.yaml' " %
                              os.path.dirname(os.path.abspath(__file__))
@@ -66,7 +64,8 @@ def main():
     # load config
     config_handle = args.config
     __log__.info("Using config %s" % config_handle.name)
-    config = yaml.load(config_handle.read())
+    print(config_handle.name)
+    config = yaml.safe_load(config_handle.read())
 
     # check config
     if not config.get('telegram', dict()).get('bot_token'):
