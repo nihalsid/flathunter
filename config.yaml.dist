@@ -85,9 +85,11 @@ message: |
 # The URL should most probably just kept like that. 
 # To use the Google Maps API, an API key is required. You can obtain one
 # without costs from the Google App Console (just google for it).
+# Additionally, to enable the API calls in the code, set the 'enable' key to True
 google_maps_api:
     key: YOUR_API_KEY
     url: https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={dest}&mode={mode}&sensor=true&key={key}&arrival_time={arrival}
+    enable: False
 
 # Sending messages using Telegram requires a Telegram Bot configured. 
 # Telegram.org offers a good documentation about how to create a bot.
