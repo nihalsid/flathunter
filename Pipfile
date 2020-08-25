@@ -13,10 +13,16 @@ PyYAML = "==5.1.2"
 requests = "==2.22.0"
 urllib3 = "==1.25.6"
 lxml = "==4.4.1"
-html5lib = "==1.0.1"
 coverage = "*"
 codecov = "*"
 requests-mock = "*"
+Flask = "*"
+Flask-API = "*"
+firebase-admin = "*"
+mock-firestore = "*"
+pytest-mock = "*"
+pytest = "*"
+pylint = "*"
 
 [dev-packages]
 

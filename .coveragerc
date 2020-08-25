@@ -1,7 +1,7 @@
 [run]
 branch = True
 source = flathunter
-command_line = -m unittest discover -s test
+command_line = -m pytest
 
 [report]
 exclude_lines =

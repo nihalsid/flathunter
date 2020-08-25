@@ -1,26 +1,47 @@
+---
+# Enable verbose mode (print DEBUG log messages)
+# verbose: true
+
 # Should the bot endlessly looop through the URLs?
 # Between each loop it waits for <sleeping_time> seconds.
+# Note that Ebay will (temporarily) block your IP if you
+# poll too often - don't lower this below 600 seconds if you
+# are crawling Ebay.
 loop:
     active: yes
     sleeping_time: 600
 
+# Location of the Database to store already seen offerings
+# Defaults to the current directory
+#database_location: /path/to/database
+
 # List the URLs containing your filter properties below.
-# Currently supported services: www.immobilienscout24.de and
-# www.wg-gesucht.de. List the URLs in the following format:
+# Currently supported services: www.immobilienscout24.de,
+# www.immowelt.de, www.wg-gesucht.de, and www.ebay-kleinanzeigen.de.
+# List the URLs in the following format:
 # urls:
 # 	- https://www.immobilienscout24.de/Suche/...
 # 	- https://www.wg-gesucht.de/...
 urls:
 
-# List of regex patterns that match with the title of the
-# flat and will be excluded. This is specially good if you
-# do not want to live in a WG or move in just temporary.
+# Define filters to exclude flats that don't meet your critera.
+# Supported filters include 'max_rooms', 'min_rooms', 'max_size', 'min_size',
+#   'max_price', 'min_price', and 'excluded_titles'.
+#
+# 'excluded_titles' takes a list of regex patterns that match against
+# the title of the flat. Any matching titles will be excluded.
 # More to Python regex here: https://docs.python.org/3/library/re.html
+#
 # Example:
-# excluded_titles:
-#   - "wg"
-#   - "zwischenmiete"
-excluded_titles:
+# filters:
+#   excluded_titles:
+#     - "wg"
+#     - "zwischenmiete"
+#   min_price: 700
+#   max_price: 1000
+#   min_size: 50
+#   max_size: 80
+filters:
 
 # There are often city districts in the address which
 # Google Maps does not like. Use this blacklist to remove
@@ -35,7 +56,7 @@ blacklist:
 #  
 # Available kinds of travel ('gm_id') can be found in the
 # Google Maps API documentation, but basically there are:
-# 	- "bicyle"
+# 	- "bicycling"
 #	- "transit" (public transport)
 #	- "driving"
 #   - "walking"
@@ -52,7 +73,7 @@ durations:
       modes: 
           - gm_id: transit
             title: "Öff."
-          - gm_id: bicycle
+          - gm_id: bicycling
             title: "Rad"
     - name: Jane
       destination: Karlsplatz, München
@@ -106,3 +127,19 @@ google_maps_api:
 telegram:
     bot_token: 
     receiver_ids:
+
+# If you are running the web interface, you can configure Login with Telegram support
+# Follow the instructions here to register your domain with the Telegram bot:
+# https://core.telegram.org/widgets/login
+#
+# website:
+#    bot_name: bot_name_xxx
+#    domain: flathunter.example.com
+#    session_key: SomeSecretValue
+#    listen:
+#      host: 127.0.0.1
+#      port: 8080
+
+# If you are deploying to google cloud,
+# uncomment this and set it to your project id. More info in the readme.
+# google_cloud_project_id: my-flathunters-project-id

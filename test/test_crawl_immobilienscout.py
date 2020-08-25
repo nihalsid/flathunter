@@ -1,21 +1,31 @@
-import unittest
+import pytest
+
 from flathunter.crawl_immobilienscout import CrawlImmobilienscout
 
-class ImmobilienscoutCrawlerTest(unittest.TestCase):
+TEST_URL = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-mieten?numberofrooms=2.0-&price=-1500.0&livingspace=70.0-&sorting=2&pagenumber=1'
 
-    TEST_URL = 'https://www.immobilienscout24.de/Suche/de/berlin/berlin/wohnung-mieten?numberofrooms=2.0-&price=-1500.0&livingspace=70.0-&sorting=2&pagenumber=1'
+@pytest.fixture
+def crawler():
+    return CrawlImmobilienscout()
 
-    def setUp(self):
-        self.crawler = CrawlImmobilienscout()
+def test_crawl_works(crawler):
+    soup = crawler.get_page(TEST_URL, 1)
+    assert soup is not None
+    entries = crawler.extract_data(soup)
+    assert entries is not None
+    assert len(entries) > 0
+    assert entries[0]['id'] > 0
+    assert entries[0]['url'].startswith("https://www.immobilienscout24.de/expose")
+    for attr in [ 'title', 'price', 'size', 'rooms', 'address' ]:
+        assert entries[0][attr] is not None
 
-    def test(self):
-        soup = self.crawler.get_page(self.TEST_URL, 1)
-        self.assertIsNotNone(soup, "Should get a soup from the URL")
-        entries = self.crawler.extract_data(soup)
-        self.assertIsNotNone(entries, "Should parse entries from search URL")
-        self.assertTrue(len(entries) > 0, "Should have at least one entry")
-        self.assertTrue(entries[0]['id'] > 0, "Id should be parsed")
-        self.assertTrue(entries[0]['url'].startswith("https://www.immobilienscout24.de/expose"), u"URL should be an exposé link")
-        for attr in [ 'title', 'price', 'size', 'rooms', 'address' ]:
-            self.assertIsNotNone(entries[0][attr], attr + " should be set")
-
+def test_process_expose_fetches_details(crawler):
+    soup = crawler.get_page(TEST_URL, 1)
+    assert soup is not None
+    entries = crawler.extract_data(soup)
+    assert entries is not None
+    assert len(entries) > 0
+    updated_entries = [ crawler.get_expose_details(expose) for expose in entries ]
+    for expose in updated_entries:
+        for attr in [ 'title', 'price', 'size', 'rooms', 'address', 'from' ]:
+            assert expose[attr] is not None
